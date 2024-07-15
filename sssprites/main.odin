@@ -209,14 +209,14 @@ main :: proc() {
         ferrorf("Failed to get image info of first image '%v'! Can't continue, because it is used to determine final sprite sheet format!", img_files[0].fullpath)
     }
 
-    count_images_per_side := c.int(math.ceil(math.sqrt(f64(count))))
+    nr_images_per_line, nr_images_per_column := approximate_lines_and_cols_for_roughly_square_output(first, count)
 
     // right now this is stupid, but later, I want the user to have the option to specify sheet size etc. and only guess what isn't specified yet
     if sheet.x == 0 {
-        sheet.x = first.x * count_images_per_side
+        sheet.x = first.x * nr_images_per_line
     }
     if sheet.y == 0 {
-        sheet.y = first.y * count_images_per_side
+        sheet.y = first.y * nr_images_per_column
     }
     if sheet.channels == 0 {
         sheet.channels = first.channels
@@ -233,7 +233,7 @@ main :: proc() {
     }
     defer free(sheet_data_rawptr)
 
-    copy_images_to_sheet_buffer(img_files[:], count_images_per_side, sheet, sheet_data)
+    copy_images_to_sheet_buffer(img_files[:], nr_images_per_line, sheet, sheet_data)
 
     write_image_to_file(output_filename, sheet, sheet_data)
 }
@@ -302,7 +302,14 @@ write_image_to_file :: proc(filename: string, info: Image_Meta, data: rawptr) {
     fmt.printf("Successfully wrote file %v\n", filename)
 }
 
-copy_images_to_sheet_buffer :: proc(img_files: []os.File_Info, count_images_per_side: c.int, sheet: Image_Meta, sheet_data: [^]byte) {
+// TODO make this work for non square input, assume that relatively square outputs are desired
+approximate_lines_and_cols_for_roughly_square_output :: proc(first: Image_Meta, count: int) -> (nr_per_line, nr_per_col: c.int) {
+    nr_per_line = c.int(math.ceil(math.sqrt(f64(count))))
+    nr_per_col = nr_per_line
+    return
+}
+
+copy_images_to_sheet_buffer :: proc(img_files: []os.File_Info, nr_images_per_line: c.int, sheet: Image_Meta, sheet_data: [^]byte) {
     offset_x, offset_y : c.int
     for img, idx in img_files {
         x, y, channels : c.int
@@ -330,7 +337,7 @@ copy_images_to_sheet_buffer :: proc(img_files: []os.File_Info, count_images_per_
             mem.copy(dst, src, src_bytes_per_line)
         }
 
-        if (idx + 1) % int(count_images_per_side) == 0{
+        if (idx + 1) % int(nr_images_per_line) == 0{
             offset_y += y * c.int(dst_bytes_per_line)
             offset_x = 0
         } else {
