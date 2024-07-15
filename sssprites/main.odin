@@ -290,11 +290,11 @@ write_image_to_file :: proc(filename: string, info: Image_Meta, data: rawptr) {
             info.channels,
             data)
     case .UNKNOWN:
-        ferrorf(`Somehow Palpatine survived!
-        Your file extension '%v' on the other hand is not worthy so I won't write an image, sorry!
-        Usually you should have gotten that info before all the processing was done, because now all
-        the data is available and now I'm just throwing it away. Probably just because of some typo.
-        What a waste of CPU time!`, ext_str)
+        ferrorf(`Somehow Palpatine survived! (This is an error that should never happen)
+        Your file extension '%v' on the other hand did not survive the filtering for allowed file
+        types, so I won't write an image, sorry! Usually you should have gotten that info before all
+        the processing was done, because now all the data is available and I'm just throwing it
+        away. Probably just because of some typo. What a waste of CPU time!`, ext_str)
     }
     if res != 1 {
         ferrorf("Failed to write output file %v", filename)
