@@ -340,8 +340,9 @@ approximate_lines_and_cols_for_roughly_square_output :: proc(x, y, count: c.int)
     area_diff := math.round(((f32(sheet_x * sheet_y) / area) - 1) * 100)
 
 
-    log.debugf("x=%v,y=%v,count=%v : area=%v, area_diff=%v%, full_side_of_square=%v, nr_per_line_float=%v, nr_per_col_float=%v",
-                x,  y,      count,  area,     area_diff,  full_side_of_square,    nr_per_line_float,  nr_per_col_float)
+    log.debugf("x=%v,y=%v,count=%v : area=%v, area_diff=%v, full_side_of_square=%v,\nnr_per_line_float=%v, nr_per_col_float=%v\nnr_per_line=%v, nr_per_col=%v",
+                x,  y,      count,  area,     area_diff,  full_side_of_square,    nr_per_line_float,  nr_per_col_float,
+                nr_per_line, nr_per_col)
 
     ok = area_diff >= 0
     return
@@ -393,8 +394,8 @@ copy_images_to_sheet_buffer :: proc(img_files: []os.File_Info, nr_images_per_lin
 
 
         assert(channels == sheet.channels)
-        assert(x < sheet.x)
-        assert(y < sheet.y)
+        assert(x <= sheet.x)
+        assert(y <= sheet.y)
         src_bytes_per_line := int(x*channels)
         dst_bytes_per_line := int(sheet.x*channels)
         // copy pixels line by line into sprite sheet
