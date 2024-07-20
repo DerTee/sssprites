@@ -8,6 +8,7 @@ import "core:mem"
 import "core:c"
 import "core:path/filepath"
 import "core:strings"
+import "core:testing"
 import stb_image "vendor:stb/image"
 
 HELP :: `
@@ -209,7 +210,8 @@ main :: proc() {
         ferrorf("Failed to get image info of first image '%v'! Can't continue, because it is used to determine final sprite sheet format!", img_files[0].fullpath)
     }
 
-    nr_images_per_line, nr_images_per_column := approximate_lines_and_cols_for_roughly_square_output(first, count)
+    nr_images_per_line, nr_images_per_column : c.int = ---, ---
+    nr_images_per_line, nr_images_per_column, ok = approximate_lines_and_cols_for_roughly_square_output(first.x, first.y, c.int(count))
 
     // right now this is stupid, but later, I want the user to have the option to specify sheet size etc. and only guess what isn't specified yet
     if sheet.x == 0 {
@@ -302,10 +304,77 @@ write_image_to_file :: proc(filename: string, info: Image_Meta, data: rawptr) {
     fmt.printf("Successfully wrote file %v\n", filename)
 }
 
-// TODO make this work for non square input, assume that relatively square outputs are desired
-approximate_lines_and_cols_for_roughly_square_output :: proc(first: Image_Meta, count: int) -> (nr_per_line, nr_per_col: c.int) {
-    nr_per_line = c.int(math.ceil(math.sqrt(f64(count))))
-    nr_per_col = nr_per_line
+// assume that relatively square outputs are desired
+approximate_lines_and_cols_for_roughly_square_output :: proc(x, y, count: c.int) -> (nr_per_line, nr_per_col: c.int, ok: bool) {
+    if x <= 0 || y <= 0 || count <= 0 {
+        return
+    }
+    area := f32(x*y*count) // the minimum area needed for the resulting rectangle
+    full_side_of_square := math.sqrt(area)
+
+    nr_per_line_float := full_side_of_square / f32(x)
+    nr_per_col_float := full_side_of_square / f32(y)
+    nr_per_line = c.int(math.floor(nr_per_line_float))
+    nr_per_col  = c.int(math.floor(nr_per_col_float))
+    if nr_per_line * nr_per_col < count {
+        rect_diff_line := math.abs(full_side_of_square - math.floor(nr_per_line_float) * f32(x))
+        rect_diff_col := math.abs(full_side_of_square - math.floor(nr_per_col_float) * f32(y))
+        if rect_diff_line < rect_diff_col {
+            nr_per_col  = c.int(math.ceil(nr_per_col_float))
+            if nr_per_line * nr_per_col < count {
+                nr_per_line = c.int(math.ceil(nr_per_line_float))
+            }
+        } else {
+            nr_per_line = c.int(math.ceil(nr_per_line_float))
+            if nr_per_line * nr_per_col < count {
+                nr_per_col  = c.int(math.ceil(nr_per_col_float))
+            }
+        }
+    } else if nr_per_line * nr_per_col > count {
+        // if a whole line/col is superfluous, remove that
+        nr_per_line += (count / nr_per_col) - nr_per_line
+        nr_per_col += (count / nr_per_line) - nr_per_col
+    }
+    sheet_x := nr_per_col * x
+    sheet_y := nr_per_line * y
+    area_diff := math.round(((f32(sheet_x * sheet_y) / area) - 1) * 100)
+
+
+    log.debugf("x=%v,y=%v,count=%v : area=%v, area_diff=%v%, full_side_of_square=%v, nr_per_line_float=%v, nr_per_col_float=%v",
+                x,  y,      count,  area,     area_diff,  full_side_of_square,    nr_per_line_float,  nr_per_col_float)
+
+    ok = area_diff >= 0
+    return
+}
+
+@(test)
+test_approximate_lines_and_cols_for_roughly_square_output :: proc(t: ^testing.T) {
+    expect_line_col(t=t, x=5, y=5, count=4, expected_x=2, expected_y=2)
+    expect_line_col(t=t, x=2, y=2, count=9, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=2, y=2, count=5, expected_x=3, expected_y=2)
+
+    expect_line_col(t=t, x=10, y=5, count=9, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=10, y=5, count=8, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=10, y=5, count=7, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=10, y=5, count=6, expected_x=2, expected_y=3)
+    expect_line_col(t=t, x=5, y=10, count=6, expected_x=3, expected_y=2)
+
+    expect_line_col :: proc(t: ^testing.T, x, y, count, expected_x, expected_y: c.int, loc := #caller_location) -> bool {
+        nr_per_line, nr_per_col, ok := approximate_lines_and_cols_for_roughly_square_output(x, y, count)
+        return testing.expectf(t, nr_per_line == expected_x && nr_per_col == expected_y && ok == true,
+                        "x=% 3v, y=% 3v, count=% 3v -> expected nr_per_line, nr_per_col = % 2v,% 2v got % 2v,% 2v and ok=%v",
+                        x, y, count, expected_x, expected_y, nr_per_line, nr_per_col, ok,
+                        loc = loc)
+    }
+}
+
+get_next_power_of_two :: proc(num: uint) -> (power_of_two: uint) {
+    // SLOW: If I get bored and am up for the challenge of putting in some assembly, then
+    // try https://stackoverflow.com/a/1334289/7302392 which is using the `lzcnt` instruction
+    power_of_two = 2
+    for power_of_two < num {
+        power_of_two *= 2
+    }
     return
 }
 
