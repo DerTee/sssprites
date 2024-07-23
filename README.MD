@@ -41,7 +41,7 @@ The OS must provide the images in the right order, which usually means that the 
 
 # Building
 
-SSSprites is written in [Odin](https://odin-lang.org), so you'll have to install the compiler and it's dependencies. Make sure you have at least version dev-2024-07.
+SSSprites is written in [Odin](https://odin-lang.org), so you'll have to install the compiler and its dependencies. Make sure you have at least version dev-2024-07.
 
 Open a terminal and go to the root of the project, then type:
 
