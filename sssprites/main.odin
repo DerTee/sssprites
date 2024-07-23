@@ -339,7 +339,6 @@ approximate_lines_and_cols_for_roughly_square_output :: proc(x, y, count: c.int)
     sheet_y := nr_per_line * y
     area_diff := math.round(((f32(sheet_x * sheet_y) / area) - 1) * 100)
 
-
     log.debugf("x=%v,y=%v,count=%v : area=%v, area_diff=%v, full_side_of_square=%v,\nnr_per_line_float=%v, nr_per_col_float=%v\nnr_per_line=%v, nr_per_col=%v",
                 x,  y,      count,  area,     area_diff,  full_side_of_square,    nr_per_line_float,  nr_per_col_float,
                 nr_per_line, nr_per_col)
@@ -350,22 +349,34 @@ approximate_lines_and_cols_for_roughly_square_output :: proc(x, y, count: c.int)
 
 @(test)
 test_approximate_lines_and_cols_for_roughly_square_output :: proc(t: ^testing.T) {
-    expect_line_col(t=t, x=5, y=5, count=4, expected_x=2, expected_y=2)
+    expect_line_col(t=t, x=1, y=1, count=5, expected_x=3, expected_y=2)
+    expect_line_col(t=t, x=3, y=3, count=4, expected_x=2, expected_y=2)
     expect_line_col(t=t, x=2, y=2, count=9, expected_x=3, expected_y=3)
-    expect_line_col(t=t, x=2, y=2, count=5, expected_x=3, expected_y=2)
 
-    expect_line_col(t=t, x=10, y=5, count=9, expected_x=3, expected_y=3)
-    expect_line_col(t=t, x=10, y=5, count=8, expected_x=3, expected_y=3)
-    expect_line_col(t=t, x=10, y=5, count=7, expected_x=3, expected_y=3)
-    expect_line_col(t=t, x=10, y=5, count=6, expected_x=2, expected_y=3)
-    expect_line_col(t=t, x=5, y=10, count=6, expected_x=3, expected_y=2)
+    expect_line_col(t=t, x=2, y=1, count=9, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=2, y=1, count=8, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=2, y=1, count=7, expected_x=3, expected_y=3)
+    expect_line_col(t=t, x=2, y=1, count=6, expected_x=2, expected_y=3)
+    expect_line_col(t=t, x=1, y=2, count=6, expected_x=3, expected_y=2)
 
     expect_line_col :: proc(t: ^testing.T, x, y, count, expected_x, expected_y: c.int, loc := #caller_location) -> bool {
         nr_per_line, nr_per_col, ok := approximate_lines_and_cols_for_roughly_square_output(x, y, count)
+        drawing_expected := draw_sheet(x, y, expected_x, expected_y)
+        defer delete(drawing_expected)
+        drawing := draw_sheet(x, y, nr_per_line, nr_per_col)
+        defer delete(drawing)
+        free_all(context.temp_allocator)
         return testing.expectf(t, nr_per_line == expected_x && nr_per_col == expected_y && ok == true,
-                        "x=% 3v, y=% 3v, count=% 3v -> expected nr_per_line, nr_per_col = % 2v,% 2v got % 2v,% 2v and ok=%v",
-                        x, y, count, expected_x, expected_y, nr_per_line, nr_per_col, ok,
+                        "x=% 3v, y=% 3v, count=% 3v -> expected nr_per_line, nr_per_col = % 2v,% 2v got % 2v,% 2v and ok=%v\nExpected:\n%v\nActual:\n%v",
+                        x, y, count, expected_x, expected_y, nr_per_line, nr_per_col, ok, drawing_expected, drawing,
                         loc = loc)
+
+        draw_sheet :: proc(x, y, nr_per_line, nr_per_col: c.int, alloc := context.allocator) -> (ascii_drawing: string) {
+            res_x_tmp, _ := strings.repeat("#", int(nr_per_line*x), context.temp_allocator)
+            res_x, _ := strings.concatenate({res_x_tmp, "\n"}, context.temp_allocator)
+            ascii_drawing, _ = strings.repeat(res_x, int(nr_per_col*y), alloc)
+            return
+        }
     }
 }
 
