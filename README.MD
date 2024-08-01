@@ -18,8 +18,8 @@ Surprisingly there seem to be very few usable sprite sheet generators for the co
 
 # Limitations
 
-## Only square images are supported as output
-... and the output size and number of channels are guessed by the number of image files in the input directory and the size of the first image file
+## Currently the output image size guessed and can't be specified
+Based on the first image in the user specified directory the image size and number of channels of all other images is assumed to be the same. The processing will fail if this assumption is incorrect. Also, the layout is currently determined by using the image size and the number of images to make a best guess of how many rows and colums are needed to create a resulting image that is as close to a square as possible. This doesn't work super great yet. Support for manually specifying rows and columns is planned. Manually specifying a resolution seems unnecessary and inconvenient to me currently.
 
 Examples:
  - 4 files, first image: 128x128px, 3ch -> output image: 256x256pixels, 3 ch
