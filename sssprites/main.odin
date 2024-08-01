@@ -11,6 +11,8 @@ import "core:strings"
 import "core:testing"
 import stb_image "vendor:stb/image"
 
+VERSION :: #config(VERSION, "none")
+
 HELP :: `
 Help
 sssprites [directory] [-out:FILENAME]
@@ -30,6 +32,7 @@ directory   This directory is my source for image files, that I will put into a 
             Example:
             sssprites C:\my\cool\sprites -out:C:\my\cool\spritesheets\sheet.png
 
+version     Prints version number
 `
 
 IMG_EXTENSION :: enum(u8) {
@@ -94,9 +97,10 @@ Image_Meta :: struct {
 }
 
 main :: proc() {
-    log_level : log.Level = .Warning
+    log_level : log.Level = .Error
     when ODIN_DEBUG {
         log_level = .Debug
+        fmt.println("In gebu gmode")
     }
     context.logger = log.create_console_logger(log_level)
 
@@ -109,6 +113,9 @@ main :: proc() {
         switch a {
             case "-help":
                 print_help()
+                return
+            case "version":
+                fmt.println(VERSION)
                 return
             case:
                 if a[0] == '-' {
