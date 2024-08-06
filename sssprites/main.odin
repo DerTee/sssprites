@@ -8,6 +8,7 @@ import "core:mem"
 import "core:c"
 import "core:path/filepath"
 import "core:strings"
+import "core:slice"
 import "core:testing"
 import stb_image "vendor:stb/image"
 
@@ -180,7 +181,7 @@ main :: proc() {
     if count := len(files); count < 2 {
         ferrorf("Failed! Found %v files in directory '%v', but I need at least 2!", count, dirname)
     }
-    img_files := make([dynamic]os.File_Info, 0, 32)
+    img_files := make([dynamic]string, 0, 32)
     defer delete(img_files)
 
     for f in files {
@@ -200,9 +201,11 @@ main :: proc() {
             log.infof("Skipping file %v because its extension is %v and not in %v", f.fullpath, extension, ALLOWED_EXTENSIONS_READ)
             continue
         }
-        append(&img_files, f)
+        append(&img_files, f.fullpath)
         free_all(context.temp_allocator)
     }
+
+    slice.sort(img_files[:])
 
     count := len(img_files)
     if count < 2 {
@@ -212,9 +215,9 @@ main :: proc() {
     sheet, first: Image_Meta
 
     // get info from first image to just guess any values that need guessing for the final sprite sheet
-    ok := stb_image.info(strings.unsafe_string_to_cstring(img_files[0].fullpath), &first.x, &first.y, &first.channels) == 1
+    ok := stb_image.info(strings.unsafe_string_to_cstring(img_files[0]), &first.x, &first.y, &first.channels) == 1
     if !ok {
-        ferrorf("Failed to get image info of first image '%v'! Can't continue, because it is used to determine final sprite sheet format!", img_files[0].fullpath)
+        ferrorf("Failed to get image info of first image '%v'! Can't continue, because it is used to determine final sprite sheet format!", img_files[0])
     }
 
     nr_images_per_line, nr_images_per_column : c.int = ---, ---
@@ -397,11 +400,10 @@ get_next_power_of_two :: proc(num: uint) -> (power_of_two: uint) {
     return
 }
 
-copy_images_to_sheet_buffer :: proc(img_files: []os.File_Info, nr_images_per_line: c.int, sheet: Image_Meta, sheet_data: [^]byte) {
+copy_images_to_sheet_buffer :: proc(img_files: []string, nr_images_per_line: c.int, sheet: Image_Meta, sheet_data: [^]byte) {
     offset_x, offset_y : c.int
-    for img, idx in img_files {
+    for img_path, idx in img_files {
         x, y, channels : c.int
-        img_path := img.fullpath
         raw_bytes := stb_image.load(strings.unsafe_string_to_cstring(img_path), &x, &y, &channels, sheet.channels)
         if raw_bytes == nil {
             log.errorf("Failed to load image nr %v '%v'!", idx+1, img_path)
