@@ -59,6 +59,11 @@ Done. Now you should have the compiled binary named "sssprites.exe" in the root 
 
 I didn't find any others that aren't super old and unsuited to my very simple use case, which is why I wrote my own. If you know other good CLI alternatives, please let me know, PRs with links are welcome!
 
+## Desktop
+
+ - https://1-enot.itch.io/gap Generic Atlas Packer (Win/Linux), which is certainly the best option I've found so far. It might even get CLI support in the future (as of now, mid August 2024, there is no CLI support yet).
+
+
 ## Web Based
 
  - https://kuut.xyz/spritesheet/
