@@ -23,7 +23,8 @@ directory   This directory is my source for image files, that I will put into a 
             files. The file names must be numbered so they are sorted correctly because that order
             will be used in the sprite sheet as well.
             Careful: Computers generally need leading zeroes in numbers if the filenames have a
-            different amounts of digits! Don't do this: MyFile1.png, ..., MyFile200.png
+            different amounts of digits!
+            Don't do this:   MyFile1.png,   ..., MyFile200.png
             Instead do this: MyFile001.png, ..., MyFile200.png
 
 -out        You can give me a filename for the output, otherwise it will just be named 'out.png' and
@@ -31,7 +32,7 @@ directory   This directory is my source for image files, that I will put into a 
             Supported file extensions: .png, .tga, .jpg (at 85% quality), .bmp
 
             Example:
-            sssprites C:\my\cool\sprites -out:C:\my\cool\spritesheets\sheet.png
+            sssprites C:\my\cool\sprites -out:C:\another\path\spritesheets\sheet.png
 
 version     Prints version number
 `

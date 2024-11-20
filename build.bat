@@ -1,4 +1,4 @@
-@echo on
+@echo off
 
 :: Make sure this is a decent name and not generic
 set exe_name=sssprites.exe
