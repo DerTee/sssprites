@@ -55,9 +55,13 @@ Done. Now you should have the compiled binary named "sssprites.exe" in the root 
 
 ## Command Line
 
- - https://imagemagick.org see https://imagemagick.org/Usage/montage/ specifically. Just found out now, otherwise I would not have written this one. Oh well.
+<del>I didn't find any alternatives that aren't super old and unsuited to my very simple use case, which is why I wrote my own. If you know other good CLI alternatives, please let me know, PRs with links are welcome!</del>
 
-I didn't find any others that aren't super old and unsuited to my very simple use case, which is why I wrote my own. If you know other good CLI alternatives, please let me know, PRs with links are welcome!
+The alternatives here are simply way more complete and general purpose than SSSprites. I would have used them if I had found them earlier.
+
+ - https://gitea.moonside.games/MoonsideGames/Cram.git This is probably the best alternative.
+ - https://imagemagick.org see https://imagemagick.org/Usage/montage/ specifically.
+
 
 ## Desktop
 
